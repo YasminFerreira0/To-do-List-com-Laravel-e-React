@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskRequest;
 use App\Models\Task;
 use Illuminate\Http\Request;
 
@@ -10,9 +11,19 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = $request->user()->tasks();
+
+        if ($request->status){
+            $query->where('status', $request->status);
+        }
+
+        if ($request->search){
+            $query->where('title', 'like', '%'.$request->search.'%');
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
     }
 
     /**
@@ -26,9 +37,9 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(TaskRequest $request)
     {
-        //
+        return $request->user()->tasks()->create($request->validated());
     }
 
     /**
@@ -36,7 +47,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        //
+        return $task;
     }
 
     /**
@@ -50,9 +61,10 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(TaskRequest $request, Task $task)
     {
-        //
+        $task->update($request->validated());
+        return $task;
     }
 
     /**
@@ -60,6 +72,7 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
+        $task->delete();
+        return response()->noContent();
     }
 }
